@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Site is Up</title>
+
+        <style>
+            body {
+                margin: 0;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                background: linear-gradient(135deg, #ffd6e8, #d6f0ff, #e4ffd6);
+                font-family: Arial, sans-serif;
+                overflow: hidden;
+            }
+
+            h1 {
+                margin-top: 30px;
+                color: #555;
+                font-size: 2.5rem;
+                letter-spacing: 2px;
+            }
+
+            .bunny {
+                position: relative;
+                width: 150px;
+                height: 150px;
+                animation: float 3s ease-in-out infinite;
+            }
+
+            .head {
+                width: 150px;
+                height: 130px;
+                background: #fff;
+                border-radius: 50%;
+                position: absolute;
+                bottom: 0;
+            }
+
+            .ear {
+                position: absolute;
+                width: 40px;
+                height: 100px;
+                background: #fff;
+                border-radius: 50px;
+                top: -70px;
+                animation: wiggle 2s ease-in-out infinite alternate;
+            }
+            .ear::after {
+                content: "";
+                position: absolute;
+                width: 20px;
+                height: 70px;
+                background: #ffcce6;
+                border-radius: 50px;
+                top: 15px;
+                left: 10px;
+            }
+            .ear.left {
+                left: 15px;
+            }
+            .ear.right {
+                right: 15px;
+                animation-delay: 0.5s;
+            }
+
+            .eye {
+                position: absolute;
+                width: 15px;
+                height: 20px;
+                background: #333;
+                border-radius: 50%;
+                top: 50px;
+            }
+            .eye.left {
+                left: 45px;
+            }
+            .eye.right {
+                right: 45px;
+            }
+
+            .blush {
+                position: absolute;
+                width: 20px;
+                height: 10px;
+                background: #ffb6c1;
+                border-radius: 50%;
+                top: 75px;
+            }
+            .blush.left {
+                left: 25px;
+            }
+            .blush.right {
+                right: 25px;
+            }
+
+            .mouth {
+                position: absolute;
+                width: 20px;
+                height: 10px;
+                border-bottom: 3px solid #333;
+                border-radius: 50%;
+                top: 75px;
+                left: 65px;
+            }
+
+            /* Animations */
+            @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-15px); }
+            }
+
+            @keyframes wiggle {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(5deg); }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="bunny">
+            <div class="ear left"></div>
+            <div class="ear right"></div>
+            <div class="head">
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+                <div class="blush left"></div>
+                <div class="blush right"></div>
+                <div class="mouth"></div>
+            </div>
+        </div>
+
+        <h1>static website is up</h1>
+    </body>
+</html>
