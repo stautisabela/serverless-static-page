@@ -1,12 +1,33 @@
-import * as cdk from "aws-cdk-lib";
+import * as cdk from 'aws-cdk-lib/core';
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
-import { Construct } from "constructs";
+import { Construct } from 'constructs';
 import * as path from "path";
 
+/**
+ * S3 Website Stack
+ * 
+ * This stack creates a production-ready static website hosting infrastructure:
+ * 
+ * 1. S3 Bucket - Stores your static website files (HTML, CSS, JS)
+ * 2. CloudFront Distribution - Provides HTTPS, caching, and global edge locations
+ * 3. Origin Access Control - Secures S3 bucket access through CloudFront only
+ * 4. S3 Deployment - Automatically uploads frontend files during deployment
+ * 
+ * Architecture:
+ * User -> CloudFront (HTTPS) -> S3 Bucket (Origin)
+ * 
+ * Benefits:
+ * - HTTPS by default (no additional certificate needed for CloudFront domain)
+ * - Global CDN for faster load times
+ * - S3 bucket is not publicly accessible (security best practice)
+ * - Automatic cache invalidation on deployment
+ */
+
 export class S3WebsiteStack extends cdk.Stack {
+  // Expose these for use in other stacks or outputs
   public readonly websiteBucket: s3.Bucket;
   public readonly distribution: cloudfront.Distribution;
 

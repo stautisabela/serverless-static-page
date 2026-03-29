@@ -1,23 +1,29 @@
 {
-  "name": "s3-website-cdk",
+  "name": "cdk",
   "version": "1.0.0",
-  "description": "CDK stack for S3 static website hosting with CloudFront",
-  "main": "bin/app.js",
+  "bin": {
+    "cdk": "bin/app.js"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
+    "test": "jest",
     "cdk": "cdk",
     "synth": "cdk synth",
     "deploy": "cdk deploy",
     "destroy": "cdk destroy"
   },
-  "dependencies": {
-    "aws-cdk-lib": "^2.170.0",
-    "constructs": "^10.4.2"
-  },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "typescript": "~5.7.0",
-    "aws-cdk": "^2.170.0"
+    "@types/jest": "^30",
+    "@types/node": "^24.10.1",
+    "jest": "^30",
+    "ts-jest": "^29",
+    "aws-cdk": "2.1114.1",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9.3"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.244.0",
+    "constructs": "^10.5.0"
   }
 }
