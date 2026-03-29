@@ -1,0 +1,12 @@
+{
+    "name": "lambda",
+    "version": "1.0.0",
+    "description": "Lambda handlers",
+    "main": "handlers/leads.js",
+    "dependencies": {},
+    "devDependencies": {
+        "@types/aws-lambda": "^8.10.145",
+        "@types/node": "^22.10.0",
+        "typescript": "~5.7.0"
+    }
+}
