@@ -122,7 +122,7 @@ export class S3WebsiteStack extends cdk.Stack {
     // Deploy Frontend Files
     // ============================================
     new s3deploy.BucketDeployment(this, "DeployWebsite", {
-      sources: [s3deploy.Source.asset(path.join(__dirname, "../../frontend"))],
+      sources: [s3deploy.Source.asset(path.join(__dirname, "../../static"))],
       destinationBucket: this.websiteBucket,
 
       // Invalidate CloudFront cache after deployment
