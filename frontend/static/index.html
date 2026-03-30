@@ -1,139 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Site is Up</title>
 
-        <style>
-            body {
-                margin: 0;
-                height: 100vh;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-direction: column;
-                background: linear-gradient(135deg, #ffd6e8, #d6f0ff, #e4ffd6);
-                font-family: Arial, sans-serif;
-                overflow: hidden;
-            }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Contact us for business inquiries. Our team will get back to you within 24 hours.">
+    <meta name="keywords" content="contact, business, inquiries, lead generation, serverless">
+    <meta name="author" content="Serverless Web Mastery">
 
-            h1 {
-                margin-top: 30px;
-                color: #555;
-                font-size: 2.5rem;
-                letter-spacing: 2px;
-            }
+    <title>Contact Us | Lead Generation Form</title>
 
-            .bunny {
-                position: relative;
-                width: 150px;
-                height: 150px;
-                animation: float 3s ease-in-out infinite;
-            }
+    <!-- Favicon -->
 
-            .head {
-                width: 150px;
-                height: 130px;
-                background: #fff;
-                border-radius: 50%;
-                position: absolute;
-                bottom: 0;
-            }
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-            .ear {
-                position: absolute;
-                width: 40px;
-                height: 100px;
-                background: #fff;
-                border-radius: 50px;
-                top: -70px;
-                animation: wiggle 2s ease-in-out infinite alternate;
-            }
-            .ear::after {
-                content: "";
-                position: absolute;
-                width: 20px;
-                height: 70px;
-                background: #ffcce6;
-                border-radius: 50px;
-                top: 15px;
-                left: 10px;
-            }
-            .ear.left {
-                left: 15px;
-            }
-            .ear.right {
-                right: 15px;
-                animation-delay: 0.5s;
-            }
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
 
-            .eye {
-                position: absolute;
-                width: 15px;
-                height: 20px;
-                background: #333;
-                border-radius: 50%;
-                top: 50px;
-            }
-            .eye.left {
-                left: 45px;
-            }
-            .eye.right {
-                right: 45px;
-            }
+<body>
+    <!-- Background Animation -->
+    <div class="background-animation">
+        <div class="gradient-sphere sphere-1"></div>
+        <div class="gradient-sphere sphere-2"></div>
+        <div class="gradient-sphere sphere-3"></div>
+    </div>
 
-            .blush {
-                position: absolute;
-                width: 20px;
-                height: 10px;
-                background: #ffb6c1;
-                border-radius: 50%;
-                top: 75px;
-            }
-            .blush.left {
-                left: 25px;
-            }
-            .blush.right {
-                right: 25px;
-            }
-
-            .mouth {
-                position: absolute;
-                width: 20px;
-                height: 10px;
-                border-bottom: 3px solid #333;
-                border-radius: 50%;
-                top: 75px;
-                left: 65px;
-            }
-
-            /* Animations */
-            @keyframes float {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-15px); }
-            }
-
-            @keyframes wiggle {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(5deg); }
-            }
-        </style>
-    </head>
-
-    <body>
-        <div class="bunny">
-            <div class="ear left"></div>
-            <div class="ear right"></div>
-            <div class="head">
-                <div class="eye left"></div>
-                <div class="eye right"></div>
-                <div class="blush left"></div>
-                <div class="blush right"></div>
-                <div class="mouth"></div>
+    <!-- Main Container -->
+    <main class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-text">ContactFlow</span>
             </div>
-        </div>
+            <nav class="nav">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </nav>
+        </header>
 
-        <h1>static website is up</h1>
-    </body>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <span class="hero-badge">🚀 Powered by AWS Serverless</span>
+                <h1 class="hero-title">
+                    Get in Touch with
+                    <span class="gradient-text">Our Team</span>
+                </h1>
+                <p class="hero-description">
+                    Have a question or want to work together? Fill out the form below and we'll get back to you within
+                    24 hours.
+                </p>
+            </div>
+        </section>
+
+        <!-- Contact Form Section -->
+        <section id="contact" class="contact-section">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2 class="form-title">Send us a Message</h2>
+                    <p class="form-subtitle">We'd love to hear from you</p>
+                </div>
+
+                <form id="contactForm" class="contact-form">
+                    <!-- Name Field -->
+                    <div class="form-group">
+                        <label for="name" class="form-label">
+                            <span class="label-icon">👤</span>
+                            Full Name
+                        </label>
+                        <input type="text" id="name" name="name" class="form-input" placeholder="John Doe" required
+                            minlength="2" maxlength="100">
+                        <span class="form-error" id="nameError"></span>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            <span class="label-icon">📧</span>
+                            Email Address
+                        </label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="john@example.com"
+                            required>
+                        <span class="form-error" id="emailError"></span>
+                    </div>
+
+                    <!-- Company Field (Optional) -->
+                    <div class="form-group">
+                        <label for="company" class="form-label">
+                            <span class="label-icon">🏢</span>
+                            Company
+                            <span class="optional-tag">Optional</span>
+                        </label>
+                        <input type="text" id="company" name="company" class="form-input" placeholder="Acme Inc."
+                            maxlength="100">
+                    </div>
+
+                    <!-- Subject Field -->
+                    <div class="form-group">
+                        <label for="subject" class="form-label">
+                            <span class="label-icon">📋</span>
+                            Subject
+                        </label>
+                        <select id="subject" name="subject" class="form-input form-select" required>
+                            <option value="">Select a topic...</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="partnership">Partnership Opportunity</option>
+                            <option value="support">Technical Support</option>
+                            <option value="feedback">Feedback</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <span class="form-error" id="subjectError"></span>
+                    </div>
+
+                    <!-- Message Field -->
+                    <div class="form-group">
+                        <label for="message" class="form-label">
+                            <span class="label-icon">💬</span>
+                            Message
+                        </label>
+                        <textarea id="message" name="message" class="form-input form-textarea"
+                            placeholder="Tell us about your project or inquiry..." required minlength="10"
+                            maxlength="1000" rows="5"></textarea>
+                        <span class="form-error" id="messageError"></span>
+                        <span class="char-count">
+                            <span id="charCount">0</span>/1000
+                        </span>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submitBtn" class="submit-btn">
+                        <span class="btn-text">Send Message</span>
+                        <span class="btn-icon">→</span>
+                        <span class="btn-loader"></span>
+                    </button>
+                </form>
+
+                <!-- Success Message -->
+                <div id="successMessage" class="success-message hidden">
+                    <div class="success-icon">✅</div>
+                    <h3 class="success-title">Message Sent Successfully!</h3>
+                    <p class="success-text">
+                        Thank you for reaching out. We'll get back to you within 24 hours.
+                    </p>
+                    <button id="newMessageBtn" class="new-message-btn">
+                        Send Another Message
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features-section">
+            <h2 class="section-title">Why Choose Us?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Lightning Fast</h3>
+                    <p class="feature-description">
+                        Powered by AWS serverless infrastructure for instant responses.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">Secure</h3>
+                    <p class="feature-description">
+                        Your data is encrypted and protected with enterprise-grade security.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3 class="feature-title">Global Reach</h3>
+                    <p class="feature-description">
+                        Served from edge locations worldwide via CloudFront CDN.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3 class="feature-title">Cost Effective</h3>
+                    <p class="feature-description">
+                        Pay only for what you use with serverless pricing model.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-text">
+                    Built with ❤️ using AWS Serverless
+                </p>
+                <p class="footer-links">
+                    <a href="https://aws.amazon.com/s3/" target="_blank" rel="noopener">S3</a>
+                    <span class="footer-divider">•</span>
+                    <a href="https://aws.amazon.com/cloudfront/" target="_blank" rel="noopener">CloudFront</a>
+                    <span class="footer-divider">•</span>
+                    <a href="https://aws.amazon.com/cdk/" target="_blank" rel="noopener">AWS CDK</a>
+                </p>
+                <p class="copyright">
+                    © 2026 Serverless Web Mastery. All rights reserved.
+                </p>
+            </div>
+        </footer>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+</body>
+
 </html>
