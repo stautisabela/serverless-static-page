@@ -1,7 +1,7 @@
 {
     "name": "lambda",
     "version": "1.0.0",
-    "description": "Lambda handlers",
+    "description": "Lambda handlers for Part 2",
     "main": "handlers/leads.js",
     "dependencies": {},
     "devDependencies": {
