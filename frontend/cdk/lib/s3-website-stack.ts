@@ -3,10 +3,6 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
-import * as logs from "aws-cdk-lib/aws-logs";
-import * as lambdaNodejs from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from 'constructs';
 import * as path from "path";
 
@@ -34,7 +30,6 @@ export class S3WebsiteStack extends cdk.Stack {
   // Expose these for use in other stacks or outputs
   public readonly websiteBucket: s3.Bucket;
   public readonly distribution: cloudfront.Distribution;
-  public readonly api: apigateway.RestApi;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -136,124 +131,6 @@ export class S3WebsiteStack extends cdk.Stack {
     });
 
     // ============================================
-    // Lambda Functions
-    // ============================================
-
-    const lambdaLogGroup = new logs.LogGroup(this, "LambdaLogGroup", {
-      retention: logs.RetentionDays.ONE_WEEK,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
-
-    // Health Check Handler
-    const healthHandler = new lambdaNodejs.NodejsFunction(
-      this,
-      "HealthHandler",
-      {
-        runtime: lambda.Runtime.NODEJS_22_X,
-        entry: path.join(__dirname, "../../lambda/handlers/health.ts"),
-        handler: "handler",
-        description: "Health check endpoint",
-        timeout: cdk.Duration.seconds(10),
-        memorySize: 128,
-        logGroup: lambdaLogGroup,
-        // Environment variables
-        environment: {
-          NODE_ENV: "production",
-          LOG_LEVEL: "INFO",
-        },
-        bundling: {
-          minify: true,
-          sourceMap: true,
-        },
-      },
-    );
-
-    // Leads Handler
-    const leadsHandler = new lambdaNodejs.NodejsFunction(this, "LeadsHandler", {
-      runtime: lambda.Runtime.NODEJS_22_X,
-      entry: path.join(__dirname, "../../lambda/handlers/leads.ts"),
-      handler: "handler",
-      description: "Leads CRUD operations",
-      timeout: cdk.Duration.seconds(30),
-      memorySize: 256,
-      logGroup: lambdaLogGroup,
-      environment: {
-        NODE_ENV: "production",
-        LOG_LEVEL: "INFO",
-      },
-      bundling: {
-        minify: true,
-        sourceMap: true,
-      },
-    });
-
-    // ============================================
-    // API Gateway
-    // ============================================
-    this.api = new apigateway.RestApi(this, "ContactFormApi", {
-      restApiName: "Contact Form API",
-      description: "Serverless API for contact form",
-
-      deployOptions: {
-        stageName: "prod",
-        loggingLevel: apigateway.MethodLoggingLevel.INFO,
-        metricsEnabled: true,
-        throttlingBurstLimit: 100,
-        throttlingRateLimit: 50,
-      },
-
-      // CORS - Critical for browser requests!
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ["Content-Type", "Authorization"],
-        allowCredentials: true,
-      },
-    });
-
-    // ============================================
-    // API Routes
-    // ============================================
-
-    // Health endpoint: GET /health
-    const apiResource = this.api.root.addResource('api');
-    const healthResource = apiResource.addResource('health');
-    healthResource.addMethod('GET', new apigateway.LambdaIntegration(healthHandler, {
-        proxy: true, // Use Lambda Proxy Integration
-    }));
-
-    // Leads endpoints
-    const leadsResource = apiResource.addResource('leads');
-
-    // POST /leads - Create a new lead
-    leadsResource.addMethod('POST', new apigateway.LambdaIntegration(leadsHandler, {
-        proxy: true,
-    }));
-
-    // GET /leads - List all leads
-    leadsResource.addMethod('GET', new apigateway.LambdaIntegration(leadsHandler, {
-        proxy: true,
-    }));
-
-    // Single lead endpoints: /leads/{id}
-    const leadByIdResource = leadsResource.addResource('{id}');
-
-    // GET /leads/{id} - Get specific lead
-    leadByIdResource.addMethod('GET', new apigateway.LambdaIntegration(leadsHandler, {
-        proxy: true,
-    }));
-
-    // PUT /leads/{id} - Update a lead
-    leadByIdResource.addMethod('PUT', new apigateway.LambdaIntegration(leadsHandler, {
-        proxy: true,
-    }));
-
-    // DELETE /leads/{id} - Delete a lead
-    leadByIdResource.addMethod('DELETE', new apigateway.LambdaIntegration(leadsHandler, {
-        proxy: true,
-    }));
-
-    // ============================================
     // Outputs
     // ============================================
     new cdk.CfnOutput(this, "WebsiteURL", {
@@ -269,11 +146,6 @@ export class S3WebsiteStack extends cdk.Stack {
     new cdk.CfnOutput(this, "BucketName", {
       value: this.websiteBucket.bucketName,
       description: "S3 Bucket Name",
-    });
-
-     new cdk.CfnOutput(this, "ApiEndpoint", {
-      value: this.api.url,
-      description: "API Gateway endpoint URL",
     });
   }
 }
