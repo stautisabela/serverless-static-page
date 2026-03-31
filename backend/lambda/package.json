@@ -3,10 +3,14 @@
     "version": "1.0.0",
     "description": "Lambda handlers for Part 2",
     "main": "handlers/leads.js",
-    "dependencies": {},
+    "dependencies": {
+        "@aws-sdk/client-dynamodb": "^3.699.0",
+        "@aws-sdk/util-dynamodb": "^3.699.0"
+    },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.145",
         "@types/node": "^22.10.0",
+        "esbuild": "^0.24.0",
         "typescript": "~5.7.0"
     }
 }

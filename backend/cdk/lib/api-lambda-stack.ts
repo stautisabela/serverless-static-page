@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -7,40 +8,132 @@ import { Construct } from 'constructs';
 import * as path from 'path';
 
 /**
- * API Lambda Stack
+ * DynamoDB Stack
  * 
- * This stack creates a serverless API layer for our contact form:
+ * This stack creates a complete data persistence layer:
  * 
- * 1. Lambda Functions - Handle business logic for leads
- * 2. API Gateway REST API - HTTP interface with CORS support
- * 3. Request/Response Models - Validate and transform data
+ * 1. DynamoDB Table - Stores leads with proper partitioning
+ * 2. Global Secondary Index - Query by email efficiently
+ * 3. Lambda Functions - CRUD operations with DynamoDB
+ * 4. API Gateway - REST API endpoints
+ * 
+ * Table Design:
+ * - Partition Key: leadId (unique identifier)
+ * - GSI: email-index (for lookup by email)
  * 
  * Architecture:
- * Client -> API Gateway (REST) -> Lambda Functions
- * 
- * Endpoints:
- * - GET  /health        - Health check
- * - POST /leads         - Create a new lead
- * - GET  /leads         - List all leads (for admin)
- * - GET  /leads/{id}    - Get a specific lead
- * 
- * Note: In Part 2, we use in-memory storage. Part 3 adds DynamoDB.
+ * API Gateway -> Lambda -> DynamoDB
  */
 export class ApiLambdaStack extends cdk.Stack {
+    public readonly leadsTable: dynamodb.Table;
     public readonly api: apigateway.RestApi;
-    public readonly leadsHandler: lambda.Function;
 
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
         // ============================================
+        // DynamoDB Table
+        // ============================================
+        /**
+         * Leads Table Design:
+         * 
+         * Primary Key: leadId (String)
+         * - Ensures unique identification
+         * - Allows efficient single-item operations
+         * 
+         * GSI: email-index
+         * - Partition: email
+         * - Allows querying leads by email address
+         * 
+         * On-Demand Capacity:
+         * - Scales automatically
+         * - Pay per request (cost-effective for variable workloads)
+         */
+        this.leadsTable = new dynamodb.Table(this, 'LeadsTable', {
+            tableName: 'ContactFormLeads',
+
+            // Partition key - unique identifier for each lead
+            partitionKey: {
+                name: 'leadId',
+                type: dynamodb.AttributeType.STRING,
+            },
+
+            // On-demand capacity - scales automatically
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+
+            // Point-in-time recovery for data protection
+            pointInTimeRecovery: true,
+
+            // Encryption at rest
+            encryption: dynamodb.TableEncryption.AWS_MANAGED,
+
+            // Removal policy - DESTROY for dev, RETAIN for production
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+
+            // Time to live - auto-delete old leads (optional)
+            // timeToLiveAttribute: 'ttl',
+        });
+
+        // Global Secondary Index for querying by email
+        this.leadsTable.addGlobalSecondaryIndex({
+            indexName: 'email-index',
+            partitionKey: {
+                name: 'email',
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'createdAt',
+                type: dynamodb.AttributeType.STRING,
+            },
+            // Project all attributes to support full lead retrieval
+            projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+        // Additional GSI for querying by status (useful for admin dashboard)
+        this.leadsTable.addGlobalSecondaryIndex({
+            indexName: 'status-index',
+            partitionKey: {
+                name: 'status',
+                type: dynamodb.AttributeType.STRING,
+            },
+            sortKey: {
+                name: 'createdAt',
+                type: dynamodb.AttributeType.STRING,
+            },
+            projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+        // ============================================
         // Lambda Functions
         // ============================================
 
-        /**
-         * Health Check Lambda
-         * Simple function to verify the API is running
-         */
+        // Leads Handler with DynamoDB access
+        const leadsHandler = new lambdaNodejs.NodejsFunction(this, 'LeadsHandler', {
+            runtime: lambda.Runtime.NODEJS_22_X,
+            entry: path.join(__dirname, '../../lambda/handlers/leads.ts'),
+            handler: 'handler',
+            description: 'Leads CRUD operations with DynamoDB',
+            timeout: cdk.Duration.seconds(30),
+            memorySize: 256,
+            logRetention: logs.RetentionDays.ONE_WEEK,
+
+            // Environment variables for DynamoDB access
+            environment: {
+                TABLE_NAME: this.leadsTable.tableName,
+                EMAIL_INDEX: 'email-index',
+                STATUS_INDEX: 'status-index',
+                NODE_ENV: 'production',
+            },
+            bundling: {
+                minify: true,
+                sourceMap: true,
+            },
+        });
+
+        // Grant DynamoDB read/write permissions to Lambda
+        this.leadsTable.grantReadWriteData(leadsHandler);
+
+        // Health Handler
         const healthHandler = new lambdaNodejs.NodejsFunction(this, 'HealthHandler', {
             runtime: lambda.Runtime.NODEJS_22_X,
             entry: path.join(__dirname, '../../lambda/handlers/health.ts'),
@@ -48,14 +141,9 @@ export class ApiLambdaStack extends cdk.Stack {
             description: 'Health check endpoint',
             timeout: cdk.Duration.seconds(10),
             memorySize: 128,
-
-            // CloudWatch Logs configuration
             logRetention: logs.RetentionDays.ONE_WEEK,
-
-            // Environment variables
             environment: {
-                NODE_ENV: 'production',
-                LOG_LEVEL: 'INFO',
+                TABLE_NAME: this.leadsTable.tableName,
             },
             bundling: {
                 minify: true,
@@ -63,141 +151,76 @@ export class ApiLambdaStack extends cdk.Stack {
             },
         });
 
-        /**
-         * Leads Handler Lambda
-         * Handles all CRUD operations for leads
-         * Uses in-memory storage in Part 2 (DynamoDB in Part 3)
-         */
-        this.leadsHandler = new lambdaNodejs.NodejsFunction(this, 'LeadsHandler', {
-            runtime: lambda.Runtime.NODEJS_22_X,
-            entry: path.join(__dirname, '../../lambda/handlers/leads.ts'),
-            handler: 'handler',
-            description: 'Leads CRUD operations',
-            timeout: cdk.Duration.seconds(30),
-            memorySize: 256,
-
-            logRetention: logs.RetentionDays.ONE_WEEK,
-
-            environment: {
-                NODE_ENV: 'production',
-                LOG_LEVEL: 'INFO',
-                // DynamoDB table name will be added in Part 3
-                // TABLE_NAME: 'LeadsTable',
-            },
-            bundling: {
-                minify: true,
-                sourceMap: true,
-            },
-        });
+        // Grant read-only access for health checks (optional table check)
+        this.leadsTable.grantReadData(healthHandler);
 
         // ============================================
-        // API Gateway REST API
+        // API Gateway
         // ============================================
         this.api = new apigateway.RestApi(this, 'ContactFormApi', {
             restApiName: 'Contact Form API',
-            description: 'Serverless API for contact form lead generation',
+            description: 'Serverless API with DynamoDB persistence',
 
-            // Deploy immediately to a stage
             deployOptions: {
                 stageName: 'prod',
-
-                // Enable request/response logging
                 loggingLevel: apigateway.MethodLoggingLevel.INFO,
-                dataTraceEnabled: true,
-
-                // Enable metrics
                 metricsEnabled: true,
-
-                // Throttling to prevent abuse
                 throttlingBurstLimit: 100,
                 throttlingRateLimit: 50,
             },
 
-            // CORS Configuration - Critical for browser requests!
             defaultCorsPreflightOptions: {
                 allowOrigins: apigateway.Cors.ALL_ORIGINS,
                 allowMethods: apigateway.Cors.ALL_METHODS,
-                allowHeaders: [
-                    'Content-Type',
-                    'Authorization',
-                    'X-Amz-Date',
-                    'X-Api-Key',
-                    'X-Amz-Security-Token',
-                ],
+                allowHeaders: ['Content-Type', 'Authorization'],
                 allowCredentials: true,
-                maxAge: cdk.Duration.hours(1),
             },
-
-            // Binary media types (if needed for file uploads)
-            binaryMediaTypes: ['multipart/form-data'],
         });
 
-        // ============================================
-        // API Resources and Methods
-        // ============================================
-
-        // Health endpoint: GET /health
-        const apiResource = this.api.root.addResource('api');
-        const healthResource = apiResource.addResource('health');
-        healthResource.addMethod('GET', new apigateway.LambdaIntegration(healthHandler, {
-            proxy: true, // Use Lambda Proxy Integration
-        }));
-
-        // Leads endpoints
-        const leadsResource = apiResource.addResource('leads');
-
-        // POST /leads - Create a new lead
-        leadsResource.addMethod('POST', new apigateway.LambdaIntegration(this.leadsHandler, {
+        // API Routes
+        const health = this.api.root.addResource('health');
+        health.addMethod('GET', new apigateway.LambdaIntegration(healthHandler, {
             proxy: true,
         }));
 
-        // GET /leads - List all leads
-        leadsResource.addMethod('GET', new apigateway.LambdaIntegration(this.leadsHandler, {
+        const leads = this.api.root.addResource('leads');
+        leads.addMethod('POST', new apigateway.LambdaIntegration(leadsHandler, {
+            proxy: true,
+        }));
+        leads.addMethod('GET', new apigateway.LambdaIntegration(leadsHandler, {
             proxy: true,
         }));
 
-        // Single lead endpoints: /leads/{id}
-        const leadByIdResource = leadsResource.addResource('{id}');
-
-        // GET /leads/{id} - Get specific lead
-        leadByIdResource.addMethod('GET', new apigateway.LambdaIntegration(this.leadsHandler, {
+        const leadById = leads.addResource('{id}');
+        leadById.addMethod('GET', new apigateway.LambdaIntegration(leadsHandler, {
             proxy: true,
         }));
-
-        // PUT /leads/{id} - Update a lead
-        leadByIdResource.addMethod('PUT', new apigateway.LambdaIntegration(this.leadsHandler, {
+        leadById.addMethod('PUT', new apigateway.LambdaIntegration(leadsHandler, {
             proxy: true,
         }));
-
-        // DELETE /leads/{id} - Delete a lead
-        leadByIdResource.addMethod('DELETE', new apigateway.LambdaIntegration(this.leadsHandler, {
+        leadById.addMethod('DELETE', new apigateway.LambdaIntegration(leadsHandler, {
             proxy: true,
         }));
 
         // ============================================
-        // Stack Outputs
+        // Outputs
         // ============================================
+        new cdk.CfnOutput(this, 'TableName', {
+            value: this.leadsTable.tableName,
+            description: 'DynamoDB Table Name',
+            exportName: 'ContactFormTableName',
+        });
+
+        new cdk.CfnOutput(this, 'TableArn', {
+            value: this.leadsTable.tableArn,
+            description: 'DynamoDB Table ARN',
+            exportName: 'ContactFormTableArn',
+        });
 
         new cdk.CfnOutput(this, 'ApiEndpoint', {
             value: this.api.url,
             description: 'API Gateway endpoint URL',
-            exportName: 'ContactFormApiEndpoint',
-        });
-
-        new cdk.CfnOutput(this, 'ApiId', {
-            value: this.api.restApiId,
-            description: 'API Gateway ID',
-            exportName: 'ContactFormApiId',
-        });
-
-        new cdk.CfnOutput(this, 'HealthEndpoint', {
-            value: `${this.api.url}health`,
-            description: 'Health check endpoint',
-        });
-
-        new cdk.CfnOutput(this, 'LeadsEndpoint', {
-            value: `${this.api.url}leads`,
-            description: 'Leads API endpoint',
+            exportName: 'ContactFormApiEndpointV3',
         });
     }
 }

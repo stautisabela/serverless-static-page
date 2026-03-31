@@ -2,13 +2,15 @@
     "name": "lambda-cdk",
     "version": "1.0.0",
     "description": "Lambda handlers",
-     "scripts": {
+    "main": "bin/app.js",
+    "scripts": {
         "build": "tsc",
         "watch": "tsc -w",
         "cdk": "cdk",
         "synth": "cdk synth",
         "deploy": "cdk deploy",
-        "destroy": "cdk destroy"
+        "destroy": "cdk destroy",
+        "postinstall": "patch-package"
     },
     "dependencies": {
         "aws-cdk-lib": "^2.170.0",
@@ -16,8 +18,9 @@
     },
     "devDependencies": {
         "@types/node": "^22.10.0",
-        "typescript": "~5.7.0",
         "aws-cdk": "^2.170.0",
-        "esbuild": "^0.24.0"
+        "esbuild": "^0.24.0",
+        "patch-package": "^8.0.1",
+        "typescript": "~5.7.0"
     }
 }
